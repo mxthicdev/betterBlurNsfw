@@ -1,30 +1,34 @@
 import definePlugin from "@utils/types";
 
-let contentObserver: MutationObserver;
-const blockedImage = "https://i.ibb.co/1NK0C3L/blocked.png";
+let observer: MutationObserver;
+const BLOCKED = "https://i.ibb.co/1NK0C3L/blocked.png";
 
-function replaceMediaContent() {
-  const observer = new MutationObserver(() => {
+function startBlocking() {
+  observer = new MutationObserver(() => {
     document.querySelectorAll(".vc-nsfw-img").forEach(msg => {
-      msg.querySelectorAll("img, video").forEach(el => {
-        const isImg = el.tagName === "IMG";
-        const isVid = el.tagName === "VIDEO";
+      msg.querySelectorAll("img").forEach(img => {
+        if (img.closest(".embedImage-2Ynqkh") ||
+            img.closest("[class*=imageContainer]") ||
+            img.className.includes("image-") ||
+            img.className.includes("gif")) {
+          img.src = BLOCKED;
+          img.srcset = "";
+          img.removeAttribute("srcset");
+          img.style.objectFit = "contain";
+          img.style.maxWidth = "";
+          img.style.maxHeight = "";
+          img.width = 800;
+          img.height = 800;
+        }
+      });
 
-        if (isImg && (
-          el.closest(".embedImage-2Ynqkh") ||
-          el.closest("[class*=imageContainer]") ||
-          el.className.includes("image-") ||
-          el.className.includes("gif")
-        )) {
-          Object.assign(el, { src: blockedImage, srcset: "" });
-          Object.assign(el.style, { width: "800px", height: "800px", objectFit: "contain" });
-        }
-        else if (isVid) {
-          const r = document.createElement("img");
-          r.src = blockedImage;
-          Object.assign(r.style, { width: "800px", height: "800px", objectFit: "contain" });
-          video.replaceWith(r);
-        }
+      msg.querySelectorAll("video").forEach(video => {
+        const replacement = document.createElement("img");
+        replacement.src = BLOCKED;
+        replacement.width = 800;
+        replacement.height = 800;
+        replacement.style.objectFit = "contain";
+        video.replaceWith(replacement);
       });
 
       msg.querySelectorAll("img.emoji").forEach(img => {
@@ -44,26 +48,23 @@ function replaceMediaContent() {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
-  return observer;
 }
 
 export default definePlugin({
   name: "betterBlockNSFW",
-  description: "Replaces all media to 800x800 blocked image or text tag.",
+  description: "Replace GIFs/images/videos with blocked image at 800×800, and block emojis/stickers",
   authors: ["mxthicdev"],
-  patches: [
-    {
-      find: "}renderEmbeds(",
-      replacement: [{
-        match: /\.container/,
-        replace: "$&+(this.props.channel.nsfw ? ' vc-nsfw-img' : '')"
-      }]
-    }
-  ],
+  patches: [{
+    find: "}renderEmbeds(",
+    replacement: [{
+      match: /\.container/,
+      replace: "$&+(this.props.channel.nsfw ? ' vc-nsfw-img' : '')"
+    }]
+  }],
   start() {
-    contentObserver = replaceMediaContent();
+    startBlocking();
   },
   stop() {
-    contentObserver?.disconnect();
+    observer.disconnect();
   }
 });
