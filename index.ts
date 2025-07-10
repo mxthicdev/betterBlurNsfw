@@ -4,6 +4,8 @@ let style: HTMLStyleElement;
 let contentObserver: MutationObserver;
 
 const blockedImage = "https://i.ibb.co/1NK0C3L/blocked.png";
+const blockedEmoji = "https://cdn.discordapp.com/emojis/1393014224942403725.webp?size=128";
+const blockedSticker = "https://media.discordapp.net/stickers/1393014682507280504.webp?size=240&quality=lossless";
 
 function replaceMediaContent() {
     const observer = new MutationObserver(() => {
@@ -35,17 +37,21 @@ function replaceMediaContent() {
             message.querySelectorAll("img.emoji").forEach(img => {
                 const src = img.src;
                 if (!src.includes("twemoji")) {
-                    const span = document.createElement("span");
-                    span.textContent = " `[NSFW BLOCKED]` ";
-                    img.replaceWith(span);
+                    const replacement = document.createElement("img");
+                    replacement.src = blockedEmoji;
+                    replacement.style.height = "32px";
+                    replacement.style.width = "32px";
+                    replacement.style.verticalAlign = "middle";
+                    img.replaceWith(replacement);
                 }
             });
 
-            message.querySelectorAll(".wrapper-2a6GCs img").forEach(sticker => {
+            message.querySelectorAll(".wrapper-2a6GCs img, .stickerPreview-1uGQgT img").forEach(sticker => {
                 const replacement = document.createElement("img");
-                replacement.src = blockedImage;
+                replacement.src = blockedSticker;
                 replacement.style.maxHeight = "200px";
                 replacement.style.maxWidth = "300px";
+                replacement.style.objectFit = "contain";
                 sticker.replaceWith(replacement);
             });
         });
@@ -57,7 +63,7 @@ function replaceMediaContent() {
 
 export default definePlugin({
     name: "betterBlockNSFW",
-    description: "Replaces media in NSFW channels with a blocked image or message.",
+    description: "Replaces media in NSFW channels with custom blocked assets.",
     authors: ["mxthicdev"],
 
     patches: [
