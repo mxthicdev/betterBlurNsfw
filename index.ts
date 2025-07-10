@@ -1,9 +1,7 @@
-// CREDITS TO ORIGINAL OWNER: https://github.com/Vendicated/Vencord/tree/main/src/plugins/blurNsfw
-
-import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 
 let style: HTMLStyleElement;
+let emojiObserver: MutationObserver;
 
 function setCss() {
     style.textContent = `
@@ -15,35 +13,31 @@ function setCss() {
     `;
 }
 
-function replaceEmojis() {
-    const observer = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-            if (!(mutation.target instanceof HTMLElement)) continue;
-            const root = mutation.target.closest(".vc-nsfw-img");
-            if (!root) continue;
-
-            const contentAreas = root.querySelectorAll(".markup, .messageContent");
-            contentAreas.forEach(content => {
-                const emojis = content.querySelectorAll("img.emoji, img[class*=emoji]");
-                emojis.forEach(img => {
-                    const span = document.createElement("span");
-                    span.textContent = "[NSFW BLOCKER]";
-                    img.replaceWith(span);
-                });
+function replaceEmojiAndStickers() {
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll(".vc-nsfw-img").forEach(message => {
+            message.querySelectorAll(".markup img.emoji, .messageContent img.emoji, .markup img[class*=emoji], .messageContent img[class*=emoji]").forEach(img => {
+                const span = document.createElement("span");
+                span.textContent = "[NSFW BLOCKER]";
+                img.replaceWith(span);
             });
-        }
+
+            message.querySelectorAll(".wrapper-2a6GCs img").forEach(sticker => {
+                const span = document.createElement("span");
+                span.textContent = "[NSFW BLOCKER]";
+                sticker.replaceWith(span);
+            });
+        });
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
     return observer;
 }
 
-let emojiObserver: MutationObserver;
-
 export default definePlugin({
     name: "betterBlurNSFW",
-    description: "Blur all attachments in NSFW channels and block NSFW emojis in message content.",
-    authors: [Devs.Ven],
+    description: "Blurs all attachments in NSFW channels.",
+    authors: ["mxthicdev"],
 
     patches: [
         {
@@ -61,7 +55,7 @@ export default definePlugin({
         document.head.appendChild(style);
 
         setCss();
-        emojiObserver = replaceEmojis();
+        emojiObserver = replaceEmojiAndStickers();
     },
 
     stop() {
