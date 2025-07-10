@@ -38,16 +38,29 @@ function replaceContent() {
         video.replaceWith(r);
       });
 
-      // Inline emojis & server emojis
       msg.querySelectorAll("img.emoji, img[src*='/emojis/']").forEach(img => {
         applyReplacement(img, blockedEmoji);
       });
 
-      // Stickers
       msg.querySelectorAll(
         ".wrapper-2a6GCs img, .stickerPreview-1uGQgT img, img[src*='/stickers/'], img.lazyStickers-"
-      ).forEach(img => {
-        applyReplacement(img, blockedSticker);
+      ).forEach(sticker => {
+        const wrapper = document.createElement("div");
+        wrapper.style.width = "800px";
+        wrapper.style.height = "800px";
+        wrapper.style.display = "flex";
+        wrapper.style.alignItems = "center";
+        wrapper.style.justifyContent = "center";
+        wrapper.style.overflow = "hidden";
+
+        const replacement = document.createElement("img");
+        replacement.src = blockedSticker;
+        replacement.style.width = "100%";
+        replacement.style.height = "100%";
+        replacement.style.objectFit = "cover";
+
+        wrapper.appendChild(replacement);
+        sticker.replaceWith(wrapper);
       });
     });
   });
@@ -57,7 +70,7 @@ function replaceContent() {
 
 export default definePlugin({
   name: "betterBlockNSFW",
-  description: "Blocks all NSFW media content.",
+  description: "Replace media, emojis, stickers with custom blocked assets at fixed 800×800 size.",
   authors: ["mxthicdev"],
   patches: [{
     find: "}renderEmbeds(",
