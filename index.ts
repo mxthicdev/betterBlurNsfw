@@ -19,13 +19,17 @@ function replaceEmojis() {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (!(mutation.target instanceof HTMLElement)) continue;
-            if (!mutation.target.closest(".vc-nsfw-img")) continue;
+            const root = mutation.target.closest(".vc-nsfw-img");
+            if (!root) continue;
 
-            const emojis = mutation.target.querySelectorAll("img.emoji, img[class*=emoji]");
-            emojis.forEach(img => {
-                const span = document.createElement("span");
-                span.textContent = "[NSFW BLOCKER]";
-                img.replaceWith(span);
+            const contentAreas = root.querySelectorAll(".markup, .messageContent");
+            contentAreas.forEach(content => {
+                const emojis = content.querySelectorAll("img.emoji, img[class*=emoji]");
+                emojis.forEach(img => {
+                    const span = document.createElement("span");
+                    span.textContent = "[NSFW BLOCKER]";
+                    img.replaceWith(span);
+                });
             });
         }
     });
@@ -38,7 +42,7 @@ let emojiObserver: MutationObserver;
 
 export default definePlugin({
     name: "betterBlurNSFW",
-    description: "Blur all attachments in NSFW channels and block NSFW emojis.",
+    description: "Blur all attachments in NSFW channels and block NSFW emojis in message content.",
     authors: [Devs.Ven],
 
     patches: [
