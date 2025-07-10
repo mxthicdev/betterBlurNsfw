@@ -1,26 +1,44 @@
 // CREDITS TO ORIGINAL OWNER: https://github.com/Vendicated/Vencord/tree/main/src/plugins/blurNsfw
 
-import { Settings } from "@api/Settings";
 import { Devs } from "@utils/constants";
-import definePlugin, { OptionType } from "@utils/types";
+import definePlugin from "@utils/types";
 
 let style: HTMLStyleElement;
 
 function setCss() {
     style.textContent = `
         .vc-nsfw-img [class^=imageContainer],
-        .vc-nsfw-img [class^=wrapperPaused],
-        .vc-nsfw-img img.emoji,
-        .vc-nsfw-img img[class*=emoji] {
-            filter: blur(${Settings.plugins.betterBlurNSFW.blurAmount}px);
+        .vc-nsfw-img [class^=wrapperPaused] {
+            filter: blur(90071992547409920px);
             transition: filter 0.2s;
         }
-        `;
+    `;
 }
+
+function replaceEmojis() {
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (!(mutation.target instanceof HTMLElement)) continue;
+            if (!mutation.target.closest(".vc-nsfw-img")) continue;
+
+            const emojis = mutation.target.querySelectorAll("img.emoji, img[class*=emoji]");
+            emojis.forEach(img => {
+                const span = document.createElement("span");
+                span.textContent = "[NSFW BLOCKER]";
+                img.replaceWith(span);
+            });
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return observer;
+}
+
+let emojiObserver: MutationObserver;
 
 export default definePlugin({
     name: "betterBlurNSFW",
-    description: "Blur all attachments in NSFW channels.",
+    description: "Blur all attachments in NSFW channels and block NSFW emojis.",
     authors: [Devs.Ven],
 
     patches: [
@@ -33,24 +51,17 @@ export default definePlugin({
         }
     ],
 
-    options: {
-        blurAmount: {
-            type: OptionType.NUMBER,
-            description: "Blur Amount",
-            default: 90071992547409920,
-            onChange: setCss
-        }
-    },
-
     start() {
         style = document.createElement("style");
         style.id = "VcBlurNsfw";
         document.head.appendChild(style);
 
         setCss();
+        emojiObserver = replaceEmojis();
     },
 
     stop() {
         style?.remove();
+        emojiObserver?.disconnect();
     }
 });
