@@ -2,6 +2,7 @@
 // https://github.com/sadan4
 
 import { Settings } from "@api/Settings";
+import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 
 let style: HTMLStyleElement;
@@ -9,7 +10,8 @@ let style: HTMLStyleElement;
 function setCss() {
     style.textContent = `
         .vc-nsfw-img [class^=imageContainer],
-        .vc-nsfw-img [class^=wrapperPaused] {
+        .vc-nsfw-img [class^=wrapperPaused],
+        .vc-nsfw-img [class^=stickerAsset] {
             filter: blur(${9007199254740991}px);
             transition: filter 0.2s;
         }
@@ -18,7 +20,7 @@ function setCss() {
 
 export default definePlugin({
     name: "betterBlurNSFW",
-    description: "Blur attachments in NSFW channels permanently.",
+    description: "Blur attachments and stickers in NSFW channels permanently.",
     authors: [{ name: "m.xthic", id: 1294029340543156245 }],
 
     patches: [
