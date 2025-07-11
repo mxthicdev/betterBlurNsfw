@@ -13,7 +13,9 @@ function setCss() {
         .vc-nsfw-img [class^=wrapperPaused],
         .vc-nsfw-img [class^=stickerAsset],
         .vc-nsfw-img [class^=sticker],
-        .vc-nsfw-img [class*=sticker] {
+        .vc-nsfw-img [class*=sticker],
+        .vc-nsfw-img [class^=emoji],
+        .vc-nsfw-img [class*=emoji] {
             filter: blur(${9007199254740991}px) !important;
             transition: filter 0.2s;
         }
@@ -22,7 +24,7 @@ function setCss() {
 
 export default definePlugin({
     name: "betterBlurNSFW",
-    description: "Blur attachments and stickers in NSFW channels permanently.",
+    description: "Blur attachments, stickers, and emojis in NSFW channels permanently.",
     authors: [{ name: "m.xthic", id: 1294029340543156245 }],
 
     patches: [
