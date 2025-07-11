@@ -15,7 +15,11 @@ function setCss() {
         .vc-nsfw-img [class^=sticker],
         .vc-nsfw-img [class*=sticker],
         .vc-nsfw-img [class^=emoji],
-        .vc-nsfw-img [class*=emoji] {
+        .vc-nsfw-img [class*=emoji],
+        .vc-nsfw-img [class^=jumboEmoji],
+        .vc-nsfw-img [class*=emojiContainer],
+        .vc-nsfw-img [class*=emojiCustom],
+        .vc-nsfw-img img:not([class*="spoiler"]) {
             filter: blur(${9007199254740991}px) !important;
             transition: filter 0.2s;
         }
@@ -32,6 +36,13 @@ export default definePlugin({
             find: "}renderEmbeds(",
             replacement: [{
                 match: /\.container/,
+                replace: "$&+(this.props.channel.nsfw? ' vc-nsfw-img': '')"
+            }]
+        },
+        {
+            find: "renderMessageContent(",
+            replacement: [{
+                match: /\.messageContent/,
                 replace: "$&+(this.props.channel.nsfw? ' vc-nsfw-img': '')"
             }]
         }
