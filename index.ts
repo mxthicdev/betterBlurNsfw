@@ -4,8 +4,7 @@
 import { Settings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { findStore } from "@api/stores";
-import { ChannelStore } from "discord-types/general";
+import { findByProps } from "@webpack/common";
 
 let style: HTMLStyleElement;
 let observer: MutationObserver;
@@ -20,12 +19,14 @@ function setCss() {
 }
 
 function isNsfwChannel(channelId: string): boolean {
-    const channel = findStore("ChannelStore").getChannel(channelId);
+    const { getChannel } = findByProps("getChannel");
+    const channel = getChannel(channelId);
     return channel?.nsfw ?? false;
 }
 
 function applyBlur() {
-    const channelId = document.querySelector("[class*=guildChannel]")?.getAttribute("data-channel-id");
+    const channelId = document.querySelector("[class*=channelName]")?.getAttribute("data-channel-id") ||
+                      document.querySelector("[class*=chat]")?.getAttribute("data-channel-id");
     if (!channelId || !isNsfwChannel(channelId)) return;
 
     const emojis = document.querySelectorAll("img[src*='cdn.discordapp.com/emojis']");
