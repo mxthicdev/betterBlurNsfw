@@ -4,26 +4,50 @@
 import { Settings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
+import { findStore } from "@api/stores";
+import { ChannelStore } from "discord-types/general";
 
 let style: HTMLStyleElement;
+let observer: MutationObserver;
 
 function setCss() {
     style.textContent = `
-        .vc-nsfw-img [class^=imageContainer],
-        .vc-nsfw-img [class^=wrapperPaused],
-        .vc-nsfw-img [class^=stickerAsset],
-        .vc-nsfw-img [class^=sticker],
-        .vc-nsfw-img [class*=sticker],
-        .vc-nsfw-img [class^=emoji],
-        .vc-nsfw-img [class*=emoji],
-        .vc-nsfw-img [class^=jumboEmoji],
-        .vc-nsfw-img [class*=emojiContainer],
-        .vc-nsfw-img [class*=emojiCustom],
-        .vc-nsfw-img img:not([class*="spoiler"]) {
+        .vc-nsfw-blur {
             filter: blur(${9007199254740991}px) !important;
             transition: filter 0.2s;
         }
         `;
+}
+
+function isNsfwChannel(channelId: string): boolean {
+    const channel = findStore("ChannelStore").getChannel(channelId);
+    return channel?.nsfw ?? false;
+}
+
+function applyBlur() {
+    const channelId = document.querySelector("[class*=guildChannel]")?.getAttribute("data-channel-id");
+    if (!channelId || !isNsfwChannel(channelId)) return;
+
+    const emojis = document.querySelectorAll("img[src*='cdn.discordapp.com/emojis']");
+    emojis.forEach((emoji) => {
+        if (!emoji.classList.contains("vc-nsfw-blur")) {
+            emoji.classList.add("vc-nsfw-blur");
+        }
+    });
+
+    const images = document.querySelectorAll("img:not([class*=spoiler])");
+    images.forEach((img) => {
+        if (img.src.includes("cdn.discordapp.com/attachments") && !img.classList.contains("vc-nsfw-blur")) {
+            img.classList.add("vc-nsfw-blur");
+        }
+    });
+
+    const stickers = document.querySelectorAll("[class*=sticker]");
+    stickers.forEach((sticker) => {
+        if (!sticker.classList.contains("vc-nsfw-blur")) {
+            sticker.classList.add("vc-nsfw-blur");
+        }
+    });
 }
 
 export default definePlugin({
@@ -31,22 +55,7 @@ export default definePlugin({
     description: "Blur attachments, stickers, and emojis in NSFW channels permanently.",
     authors: [{ name: "m.xthic", id: 1294029340543156245 }],
 
-    patches: [
-        {
-            find: "}renderEmbeds(",
-            replacement: [{
-                match: /\.container/,
-                replace: "$&+(this.props.channel.nsfw? ' vc-nsfw-img': '')"
-            }]
-        },
-        {
-            find: "renderMessageContent(",
-            replacement: [{
-                match: /\.messageContent/,
-                replace: "$&+(this.props.channel.nsfw? ' vc-nsfw-img': '')"
-            }]
-        }
-    ],
+    patches: [],
 
     start() {
         style = document.createElement("style");
@@ -54,9 +63,17 @@ export default definePlugin({
         document.head.appendChild(style);
 
         setCss();
+
+        observer = new MutationObserver((mutations) => {
+            mutations.forEach(() => applyBlur());
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        applyBlur();
     },
 
     stop() {
         style?.remove();
+        observer?.disconnect();
     }
 });
