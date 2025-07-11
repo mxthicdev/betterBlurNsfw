@@ -11,8 +11,10 @@ function setCss() {
     style.textContent = `
         .vc-nsfw-img [class^=imageContainer],
         .vc-nsfw-img [class^=wrapperPaused],
-        .vc-nsfw-img [class^=stickerAsset] {
-            filter: blur(${9007199254740991}px);
+        .vc-nsfw-img [class^=stickerAsset],
+        .vc-nsfw-img [class^=sticker],
+        .vc-nsfw-img [class*=sticker] {
+            filter: blur(${9007199254740991}px) !important;
             transition: filter 0.2s;
         }
         `;
