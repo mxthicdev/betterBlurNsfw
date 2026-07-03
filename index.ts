@@ -23,7 +23,7 @@ function setCss() {
 export default definePlugin({
     name: "betterBlurNSFW",
     description: "Blur attachments and stickers in NSFW channels permanently.",
-    authors: [{ name: "m.xthic", id: 1294029340543156245 }],
+    authors: [{ name: "m_xthic", id: 1294029340543156245 }],
 
     patches: [
         {
